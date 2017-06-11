@@ -1,8 +1,8 @@
 val Scala      = "2.12.2-bin-typelevel-4"
 val Circe      = "0.8.0"
 val Http4s     = "0.15.13"
-val Pine       = "0.1.0-SNAPSHOT"
-val Trail      = "0.1.0-SNAPSHOT"
+val Pine       = "0.1.0"
+val Trail      = "0.1.0"
 val Paradise   = "2.1.0"
 val ScalaJsDom = "0.9.1"
 
