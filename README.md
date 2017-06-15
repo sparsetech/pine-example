@@ -24,7 +24,7 @@ without the need to restart the server.
 ## Usage
 ```scala
 $ sbt
-reStart
+buildJVM/reStart
 ```
 
 ## Licence
