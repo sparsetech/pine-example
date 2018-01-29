@@ -28,27 +28,20 @@ object JsGlobals extends js.Object {
 object Template {
   def get(template: String): Tag[_] =
     HtmlParser.fromString(JsGlobals.templates(template))
-      .asInstanceOf[Tag[_]]
 }
 
 object AjaxService extends Service {
   override def request[Resp](req: Request[Resp]): Future[Resp] = {
-    val json = req.asJson.noSpaces
-
     // See http://stackoverflow.com/a/5175782
     dom.window.document.body.className = "waiting"  // Set waiting cursor
-    val response = Ajax.post(Routes.api(), json)
-    response.onComplete(_ => dom.window.document.body.className = "") // Reset cursor
 
-    response.flatMap { resp =>
-      decode(resp.responseText)(req.decoder) match {
-        case Left(e) =>
-          e.printStackTrace()
-          Future.failed(e)
+    val response = Ajax.post(Routes.api(), req.asJson.noSpaces).flatMap(r =>
+      Future.fromTry(decode(r.responseText)(req.decoder).toTry))
 
-        case Right(r) => Future.successful(r)
-      }
-    }
+    // Reset cursor
+    response.onComplete(_ => dom.window.document.body.className = "")
+    response.failed.foreach(Console.err.println(_))
+    response
   }
 }
 
