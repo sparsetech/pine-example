@@ -71,7 +71,7 @@ object App {
     Window.popState := render(dom.window.location.href)
     Window.click    := { e =>
       // The user may click a child within <a>, traverse parents too
-      def handle: dom.Node => Unit = {
+      def handle: dom.EventTarget => Unit = {
         case null =>
         case a: dom.html.Anchor
           if a.href.startsWith(dom.window.location.origin.get) =>
@@ -79,10 +79,10 @@ object App {
             e.preventDefault()
             redirect(a.href)
           }
-        case n => handle(n.parentNode)
+        case n: dom.Node => handle(n.parentNode)
       }
 
-      handle(e.target.asInstanceOf[dom.Node])
+      handle(e.target)
     }
   }
 }
