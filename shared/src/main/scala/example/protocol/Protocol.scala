@@ -1,26 +1,33 @@
 package example.protocol
 
-import io.circe._
+import io.circe.{Encoder, Decoder, ObjectEncoder}
 import io.circe.generic.auto._
-import io.circe.generic.JsonCodec
 
 case class NumberGuessResult(solved: Boolean, message: String)
-@JsonCodec case class BookListItem(id: Int, title: String)
-case class BookDetailsRecord(id: Int, title: String, author: String, price: Double)
+case class BookListItem(id: Int, title: String)
+case class BookDetailsRecord(id: Int,
+                             title: String,
+                             author: String,
+                             price: Double)
 
-@JsonCodec sealed trait Request
-
-sealed abstract class TypedRequest[T](implicit val encoder: Encoder[T],
-                                               val decoder: Decoder[T])
-  extends Request
+sealed abstract class Request[T](implicit val encoder: Encoder[T],
+                                          val decoder: Decoder[T])
 
 case class NumberGuessReset()
-  extends TypedRequest[String] with Request
+  extends Request[String]
 
 case class NumberGuessSubmit(guess: Int)
-  extends TypedRequest[NumberGuessResult] with Request
+  extends Request[NumberGuessResult]
 
-case class Books() extends TypedRequest[List[BookListItem]] with Request
+case class Books() extends Request[List[BookListItem]]
 
 case class BookDetails(id: Int)
-  extends TypedRequest[Either[String, BookDetailsRecord]] with Request
+  extends Request[Either[String, BookDetailsRecord]]
+
+object Request {
+  import io.circe.generic.semiauto._
+  implicit def encodeRequest[T]: ObjectEncoder[Request[T]] =
+    deriveEncoder[Request[_]].asInstanceOf[ObjectEncoder[Request[T]]]
+  implicit def decodeRequest[T]: Decoder[Request[T]] =
+    deriveDecoder[Request[_]].asInstanceOf[Decoder[Request[T]]]
+}

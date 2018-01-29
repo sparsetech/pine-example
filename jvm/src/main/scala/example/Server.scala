@@ -21,7 +21,6 @@ import org.http4s.server.blaze.BlazeBuilder
 import pine._
 
 import example.page.Page
-import example.protocol.TypedRequest
 
 object Server extends StreamApp {
   implicit val strategy = fs2.Strategy.fromFixedDaemonPool(2)
@@ -68,9 +67,9 @@ object Server extends StreamApp {
 
     case request @ POST -> _ if Routes.api.parse(request.pathInfo).isDefined =>
       EntityDecoder.decodeString(request).flatMap { bodyString =>
-        decode[protocol.Request](bodyString) match {
+        decode[protocol.Request[Any]](bodyString) match {
           case Left(_) => BadRequest("Malformed JSON payload")
-          case Right(req: TypedRequest[_]) =>
+          case Right(req) =>
             val response = JvmService.request(req).map(
               _.asJson(req.encoder).noSpaces)
             sendResponse(response, MediaType.`application/json`)

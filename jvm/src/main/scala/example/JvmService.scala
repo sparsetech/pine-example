@@ -58,7 +58,7 @@ object JvmService extends Service {
     }
   }
 
-  override def request[Resp](req: TypedRequest[Resp]): Future[Resp] = req match {
+  override def request[Resp](req: Request[Resp]): Future[Resp] = req match {
     case r: Books => Future.fromTry(Try(books(r)))
     case r: BookDetails => Future.fromTry(Try(bookDetails(r)))
     case r: NumberGuessReset => Future.fromTry(Try(numberGuessReset(r)))

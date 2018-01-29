@@ -1,9 +1,8 @@
 package example.page
 
 import example.protocol.BookListItem
-import io.circe.generic.JsonCodec
 
-@JsonCodec sealed trait Page
+sealed trait Page
 
 case class Index()                          extends Page
 case class NumberGuess()                    extends Page

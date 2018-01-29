@@ -1,7 +1,7 @@
 package example
 
 import example.page.Page
-import example.protocol.{Request, TypedRequest}
+import example.protocol.Request
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 import pine._
@@ -10,7 +10,7 @@ import trail._
 
 import scala.concurrent.Future
 import scala.scalajs.js
-import scala.scalajs.js.{JSApp, JSON}
+import scala.scalajs.js.JSON
 import scala.scalajs.js.annotation.JSGlobalScope
 import scala.concurrent.ExecutionContext.Implicits.global
 import io.circe._
@@ -32,8 +32,8 @@ object Template {
 }
 
 object AjaxService extends Service {
-  override def request[Resp](req: TypedRequest[Resp]): Future[Resp] = {
-    val json = (req: Request).asJson.noSpaces
+  override def request[Resp](req: Request[Resp]): Future[Resp] = {
+    val json = req.asJson.noSpaces
 
     // See http://stackoverflow.com/a/5175782
     dom.window.document.body.className = "waiting"  // Set waiting cursor
@@ -52,7 +52,7 @@ object AjaxService extends Service {
   }
 }
 
-object App extends JSApp {
+object App {
   def render(url: String): Unit = {
     val path = PathParser.parsePathAndQuery(url)
     Routes.renderPage(path, AjaxService).map { case (page, title, node) =>
@@ -73,7 +73,7 @@ object App extends JSApp {
     decode[Page](json).right.get
   }
 
-  override def main(): Unit = {
+  def main(args: Array[String]): Unit = {
     Window.load     := Manage.page(serverPage())
     Window.popState := render(dom.window.location.href)
     Window.click    := { e =>
