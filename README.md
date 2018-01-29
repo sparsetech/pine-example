@@ -4,7 +4,7 @@ for HTML rendering, [Trail](https://github.com/sparsetech/trail) for routing,
 [Circe](https://github.com/circe/circe) for JSON handling and
 [http4s](https://github.com/http4s/http4s) for serving pages.
 
-The [chosen architecture](https://github.com/sparsetech/pine/blob/master/docs/3-web-development.md) is:
+The [chosen architecture](http://sparse.tech/docs/pine.html#architectures) is:
 
 > Server-side rendered pages with client logic and client-side rendering
 
