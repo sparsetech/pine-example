@@ -1,3 +1,6 @@
+// Shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
+import sbtcrossproject.{crossProject, CrossType}
+
 val Scala    = "2.12.4-bin-typelevel-4"
 val Circe    = "0.8.0"
 val Http4s   = "0.17.6"
@@ -5,32 +8,24 @@ val Pine     = "0.1.1"
 val Trail    = "0.1.1"
 val Paradise = "2.1.1"
 
-val SharedSettings = Seq(
-  name         := "pine-template",
-  version      := "0.1.0",
+val jsPath = file("assets") / "js"
 
-  scalaVersion := Scala,
-  scalaOrganization := "org.typelevel",
-  scalacOptions += "-Yliteral-types",
-
-  addCompilerPlugin(
-    "org.scalamacros" % "paradise" % Paradise cross CrossVersion.patch
-  )
-)
-
-val outPath = new File("assets")
-val jsPath  = outPath / "js"
-
-lazy val root = project.in(file("."))
-  .aggregate(js, jvm)
-  .settings(SharedSettings: _*)
-  .settings(publishArtifact := false)
-
-lazy val build = crossProject.in(file("."))
-  .settings(SharedSettings: _*)
-  .jvmSettings(Revolver.settings: _*)
+lazy val example = crossProject(JSPlatform, JVMPlatform)
+  .withoutSuffixFor(JVMPlatform)
+  .in(file("."))
   .settings(
-    libraryDependencies ++= Seq(
+    name    := "pine-example",
+    version := "0.1.0",
+
+    scalaVersion      := Scala,
+    scalaOrganization := "org.typelevel",
+    scalacOptions     += "-Yliteral-types",
+
+    addCompilerPlugin(
+      "org.scalamacros" % "paradise" % Paradise cross CrossVersion.patch
+    ),
+
+    libraryDependencies ++= Vector(
       "tech.sparse"  %%% "pine"          % Pine,
       "tech.sparse"  %%% "trail"         % Trail,
       "io.circe"     %%% "circe-core"    % Circe,
@@ -39,11 +34,14 @@ lazy val build = crossProject.in(file("."))
     )
   )
   .jvmSettings(
-    libraryDependencies ++= Seq(
+    libraryDependencies ++= Vector(
       "org.http4s"  %% "http4s-dsl"          % Http4s,
       "org.http4s"  %% "http4s-blaze-client" % Http4s,
       "org.http4s"  %% "http4s-blaze-server" % Http4s
-    )
+    ),
+
+    reStart / mainClass     := Some("example.Server"),
+    reStart / baseDirectory := file(".")
   )
   .jsSettings(
     // From https://github.com/scala-js/scala-js/pull/2954
@@ -51,14 +49,11 @@ lazy val build = crossProject.in(file("."))
     addCompilerPlugin("org.scala-js" % "scalajs-compiler" % scalaJSVersion cross CrossVersion.patch),
 
     scalaJSUseMainModuleInitializer := true,
-    artifactPath in (Compile, fastOptJS) := jsPath / "application.js",
-    artifactPath in (Compile, fullOptJS) := jsPath / "application.js"
+    Compile / fastOptJS / artifactPath := jsPath / "application.js",
+    Compile / fullOptJS / artifactPath := jsPath / "application.js"
   )
 
-lazy val js = build.js
-
-lazy val jvm = build.jvm.settings(
-  baseDirectory in reStart := new File("."),
-  reStart := reStart.dependsOn(fastOptJS in (js, Compile)).evaluated,
-  mainClass in reStart := Some("example.Server")
+lazy val js  = example.js
+lazy val jvm = example.jvm.settings(
+  reStart := reStart.dependsOn(js / Compile / fastOptJS).evaluated,
 )
