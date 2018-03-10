@@ -1,11 +1,12 @@
 // Shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
 import sbtcrossproject.{crossProject, CrossType}
 
+val Pine     = "0.1.1"
+val Trail    = "0.1.1"
 val Scala    = "2.12.4-bin-typelevel-4"
 val Circe    = "0.8.0"
 val Http4s   = "0.17.6"
-val Pine     = "0.1.1"
-val Trail    = "0.1.1"
+val Scribe   = "2.2.0"
 val Paradise = "2.1.1"
 
 val jsPath = file("assets") / "js"
@@ -37,7 +38,8 @@ lazy val example = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Vector(
       "org.http4s"  %% "http4s-dsl"          % Http4s,
       "org.http4s"  %% "http4s-blaze-client" % Http4s,
-      "org.http4s"  %% "http4s-blaze-server" % Http4s
+      "org.http4s"  %% "http4s-blaze-server" % Http4s,
+      "com.outr"    %% "scribe-slf4j"        % Scribe
     ),
 
     reStart / mainClass     := Some("example.Server"),
@@ -55,5 +57,5 @@ lazy val example = crossProject(JSPlatform, JVMPlatform)
 
 lazy val js  = example.js
 lazy val jvm = example.jvm.settings(
-  reStart := reStart.dependsOn(js / Compile / fastOptJS).evaluated,
+  reStart := reStart.dependsOn(js / Compile / fastOptJS).evaluated
 )
