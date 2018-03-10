@@ -2,29 +2,29 @@ package example
 
 import java.io.File
 
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
+import io.circe.generic.auto._
 
-import fs2.{Stream, Task}
-import fs2.interop.cats._
+import cats.effect.IO
+
+import fs2.StreamApp
+import fs2.Stream
+import fs2.StreamApp.ExitCode
 
 import org.http4s._
-import org.http4s.dsl._
-import org.http4s.util.StreamApp
+import org.http4s.dsl.io._
 import org.http4s.server.blaze.BlazeBuilder
 
 import pine._
 
 import example.page.Page
 
-object Server extends StreamApp {
-  implicit val strategy = fs2.Strategy.fromFixedDaemonPool(2)
-
+object Server extends StreamApp[IO] {
   def renderPage(result: Future[(Page, String, Node)]): Future[String] =
     result.map { case (page, title, node) =>
       Templates.layout.update { implicit ctx =>
@@ -38,28 +38,24 @@ object Server extends StreamApp {
       }.toHtml
     }
 
-  def sendResponse(future: Future[String], tpe: MediaType): Task[Response] =
-    Task.fromFuture(
+  def sendResponse(future: Future[String], tpe: MediaType): IO[Response[IO]] =
+    IO.fromFuture(IO(
       future.transform {
         case Success(value) =>
-          Success(Ok(value).withContentType(Some(headers.`Content-Type`(tpe))))
+          Success(Ok(value, headers.`Content-Type`(tpe)))
 
         case Failure(e) =>
           e.printStackTrace()
           Success(InternalServerError(e.toString))
       }
-    ).flatMap(identity)
+    )).flatMap(identity)
 
-  val service = HttpService {
+  val service = HttpService[IO] {
     case _ @ GET -> Root / "js" / "templates.js" =>
       val json    = Template.all().asJson.noSpaces
       val content = "var templates = " + json
 
-      Ok(content)
-        .withContentType(Some(
-          headers
-            .`Content-Type`(MediaType.`application/javascript`)
-            .withCharset(Charset.`UTF-8`)))
+      Ok(content, headers.`Content-Type`(MediaType.`application/javascript`))
 
     case request @ GET -> Root / "js" / fileName =>
       StaticFile.fromFile(new File("assets/js/", fileName), Some(request))
@@ -68,7 +64,7 @@ object Server extends StreamApp {
     case request @ POST -> _ if Routes.api.parse(request.pathInfo).isDefined =>
       EntityDecoder.decodeString(request).flatMap { bodyString =>
         decode[protocol.Request[Any]](bodyString) match {
-          case Left(_) => BadRequest("Malformed JSON payload")
+          case Left(_)    => BadRequest("Malformed JSON payload")
           case Right(req) =>
             val response = JvmService.request(req).map(
               _.asJson(req.encoder).noSpaces)
@@ -86,8 +82,9 @@ object Server extends StreamApp {
       sendResponse(renderPage(page), MediaType.`text/html`)
   }
 
-  override def stream(args: List[String]): Stream[Task, Nothing] =
-    BlazeBuilder
+  override def stream(args: List[String],
+                      requestShutdown: IO[Unit]): Stream[IO, ExitCode] =
+    BlazeBuilder[IO]
       .bindHttp(8080, "localhost")
       .mountService(service)
       .serve

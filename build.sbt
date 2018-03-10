@@ -4,8 +4,8 @@ import sbtcrossproject.{crossProject, CrossType}
 val Pine     = "0.1.1"
 val Trail    = "0.1.1"
 val Scala    = "2.12.4-bin-typelevel-4"
-val Circe    = "0.8.0"
-val Http4s   = "0.17.6"
+val Circe    = "0.9.1"
+val Http4s   = "0.18.1"
 val Scribe   = "2.2.0"
 val Paradise = "2.1.1"
 
