@@ -1,6 +1,6 @@
 package example.protocol
 
-import io.circe.{Encoder, Decoder, ObjectEncoder}
+import io.circe.{Encoder, Decoder}
 import io.circe.generic.auto._
 
 case class NumberGuessResult(solved: Boolean, message: String)
@@ -26,8 +26,8 @@ case class BookDetails(id: Int)
 
 object Request {
   import io.circe.generic.semiauto._
-  implicit def encodeRequest[T]: ObjectEncoder[Request[T]] =
-    deriveEncoder[Request[_]].asInstanceOf[ObjectEncoder[Request[T]]]
+  implicit def encodeRequest[T]: Encoder[Request[T]] =
+    deriveEncoder[Request[_]].asInstanceOf[Encoder[Request[T]]]
   implicit def decodeRequest[T]: Decoder[Request[T]] =
     deriveDecoder[Request[_]].asInstanceOf[Decoder[Request[T]]]
 }
