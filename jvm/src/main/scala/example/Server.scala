@@ -78,8 +78,10 @@ object Server extends StreamApp[IO] {
         case qry => request.pathInfo + "?" + qry
       }
 
-      val page = Routes.renderPage(path, JvmService)
-      sendResponse(renderPage(page), MediaType.`text/html`)
+      Routes.renderPage(path, JvmService) match {
+        case None       => NotFound()
+        case Some(page) => sendResponse(renderPage(page), MediaType.`text/html`)
+      }
   }
 
   override def stream(args: List[String],

@@ -51,11 +51,12 @@ object AjaxService extends Service {
 object App {
   def render(url: String): Unit = {
     val path = PathParser.parsePathAndQuery(url)
-    Routes.renderPage(path, AjaxService).map { case (page, title, node) =>
-      DOM.render(implicit ctx => TagRef[tag.Body] := node)
-      Manage.page(page)
-      dom.document.title = title
-    }
+    Routes.renderPage(path, AjaxService).foreach(
+      _.map { case (page, title, node) =>
+        DOM.render(implicit ctx => TagRef[tag.Body] := node)
+        Manage.page(page)
+        dom.document.title = title
+      })
   }
 
   def redirect(url: String): Unit = {
