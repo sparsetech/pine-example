@@ -31,8 +31,7 @@ object Server extends StreamApp[IO] {
         TagRef[tag.Body ] := node
         TagRef[tag.Title] := title
         TagRef[tag.Head ].append(
-          tag.Script.set(s"var page = ${page.asJson.noSpaces};")
-        )
+          tag.Script.set(s"var page = ${page.asJson.noSpaces};"))
       }.toHtml
     }
 
